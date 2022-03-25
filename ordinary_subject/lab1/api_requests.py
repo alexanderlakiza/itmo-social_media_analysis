@@ -58,6 +58,26 @@ def get_posts_of_group(group_id):
     return posts_infos
 
 
+def get_friends_of_members(list_of_members):
+    result = {}
+    for i in list_of_members:
+        result[i] = []
+
+        query = f"{vk_cfg['vk_api_domain']}/friends.get?" \
+                f"user_id={i}&" \
+                f"access_token={vk_cfg['access_token']}&v={vk_cfg['api_version']}"
+
+        try:
+            friends_list = requests.get(url=query).json()['response']['items']
+            result[i].extend(friends_list)
+        except KeyError:
+            pass
+
+        time.sleep(0.35)
+
+    return result
+
+
 if __name__ == "__main__":
     ids_of_groups = {"formula1.championat": get_id_from_nickname("formula1.championat"),
                      "grand_prixf1_ru": get_id_from_nickname("grand_prixf1_ru")}
@@ -72,10 +92,18 @@ if __name__ == "__main__":
 
     print('Posts are collected!')
 
+    friends_dict = {"formula1.championat": get_friends_of_members(members_dict["formula1.championat"]),
+                    "grand_prixf1_ru": get_friends_of_members(members_dict["grand_prixf1_ru"])}
+
+    print('Friends of members are collected')
+
     with open('members_of_groups.pickle', 'wb') as handle:
         pickle.dump(members_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     with open('posts_of_groups.pickle', 'wb') as handle:
         pickle.dump(posts_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open('friends_of_members.pickle', 'wb') as handle:
+        pickle.dump(friends_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     print('All data is collected and saved!')
